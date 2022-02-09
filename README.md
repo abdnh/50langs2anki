@@ -4,10 +4,10 @@ and generate [Anki](https://apps.ankiweb.net/) flashcards from them for language
 ## Usage
 
 - Install dependencies: `pip install -r requirements.txt`
-- Run the script using something like: `python fiftylangs2anki.py --srclang en --destlang tr --start 5 --end 10`
+- Run the script using something like: `python fiftylangs2anki.py --src en --dest tr --start 5 --end 10`
 - You should see a deck package named `50Languages_en-tr_5-10.apkg` in the current working directory.
 
-The `--srclang` and `--destlang` flags take codes of two languages. These are languages you choose in 50Languages's interface
+The `--src` and `--dest` flags take codes of two languages. These are languages you choose in 50Languages's interface
 and are shown in the URL of each lesson.
 
 ![50Languages's language chooser](50langs-langchooser.png)
@@ -33,7 +33,7 @@ pp(mw.col.models.by_name("50Languages_en-tr_1-100")['id'])
 
 This will give you the ID, which you can pass to the script like:
 ```
-python fiftylangs2anki.py --srclang en --destlang tr --model-id 1409094762
+python fiftylangs2anki.py --src en --dest tr --model-id 1409094762
 ```
 
 ## Caching

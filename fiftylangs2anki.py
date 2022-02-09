@@ -9,7 +9,7 @@ import requests
 from bs4 import BeautifulSoup
 import genanki
 
-LESSON_LINK = "https://www.50languages.com/phrasebook/lesson/{lang1}/{lang2}/{lesson}"
+LESSON_LINK = "https://www.50languages.com/phrasebook/lesson/{src}/{dest}/{lesson}"
 SOUND_LINK = "https://www.book2.nl/book2/{lang}/SOUND/{sound_id}.mp3"
 
 CSS = """\
@@ -47,9 +47,9 @@ def get_cached_sentences(lang: str) -> Dict:
         return json.load(f)
 
 
-def get_cached_lesson_sentences(lang1: str, lang2: str, lesson_id: str) -> Tuple:
-    sentences_1 = get_cached_sentences(lang1).get(lesson_id, {})
-    sentences_2 = get_cached_sentences(lang2).get(lesson_id, {})
+def get_cached_lesson_sentences(src: str, dest: str, lesson_id: str) -> Tuple:
+    sentences_1 = get_cached_sentences(src).get(lesson_id, {})
+    sentences_2 = get_cached_sentences(dest).get(lesson_id, {})
     return sentences_1, sentences_2
 
 
@@ -78,45 +78,45 @@ def random_id() -> int:
     return random.randrange(1 << 30, 1 << 31)
 
 
-def get_model(lang1: str, lang2: str, model_id: Optional[int] = None) -> genanki.Model:
+def get_model(src: str, dest: str, model_id: Optional[int] = None) -> genanki.Model:
     return genanki.Model(
         model_id if model_id is not None else random_id(),
-        f"50Languages {lang1}-{lang2}",
+        f"50Languages {src}-{dest}",
         fields=[
-            {"name": lang1},
-            {"name": lang2},
-            {"name": f"{lang2}_audio"},
+            {"name": src},
+            {"name": dest},
+            {"name": f"{dest}_audio"},
             {"name": "Reference"},
         ],
         templates=[
             {
-                "name": f"{lang2}-{lang1}",
-                "qfmt": "{{" + lang2 + "}}\n<br>\n" + "{{" + f"{lang2}_audio" + "}}",
+                "name": f"{dest}-{src}",
+                "qfmt": "{{" + dest + "}}\n<br>\n" + "{{" + f"{dest}_audio" + "}}",
                 "afmt": "{{FrontSide}}\n<hr id=answer>\n"
                 + "{{"
-                + lang1
+                + src
                 + "}}"
                 + "\n<br><br>\n"
                 + "{{Reference}}",
             },
             {
-                "name": f"{lang1}-{lang2}",
-                "qfmt": "{{" + lang1 + "}}\n<br>",
+                "name": f"{src}-{dest}",
+                "qfmt": "{{" + src + "}}\n<br>",
                 "afmt": "{{FrontSide}}\n<hr id=answer>\n"
                 + "{{"
-                + lang2
+                + dest
                 + "}}\n<br>\n"
                 + "{{"
-                + f"{lang2}_audio"
+                + f"{dest}_audio"
                 + "}}"
                 + "\n<br><br>\n"
                 + "{{Reference}}",
             },
             # TODO: add audio recognition card type?
             # {
-            #     "name": f"{lang2} audio",
-            #     "qfmt": "{{" + f"{lang2}_audio" + "}}",
-            #     "afmt": "{{FrontSide}}\n<hr id=answer>\n" + "{{" + lang2 + "}}",
+            #     "name": f"{dest} audio",
+            #     "qfmt": "{{" + f"{dest}_audio" + "}}",
+            #     "afmt": "{{FrontSide}}\n<hr id=answer>\n" + "{{" + dest + "}}",
             # },
         ],
         css=CSS,
@@ -124,45 +124,45 @@ def get_model(lang1: str, lang2: str, model_id: Optional[int] = None) -> genanki
 
 
 def generate_deck(
-    lang1: str,
-    lang2: str,
+    src: str,
+    dest: str,
     start: int = 1,
     end: int = 100,
     model_id: Optional[int] = None,
 ):
     """
-    Download sentences from lesson number `start` to number `end` in `lang2` and
-    their translations in `lang1` with audio files in `lang1`
-    and create a deck package named "50Languages_{lang1}-{lang2}_{start}-{end}.apkg" in the current
+    Download sentences from lesson number `start` to number `end` in `dest` and
+    their translations in `src` with audio files in `src`
+    and create a deck package named "50Languages_{src}-{dest}_{start}-{end}.apkg" in the current
     working directory.
     """
-    deck_package_name = f"50Languages_{lang1}-{lang2}_{start}-{end}.apkg"
+    deck_package_name = f"50Languages_{src}-{dest}_{start}-{end}.apkg"
     print(f"- generating {deck_package_name}")
-    model = get_model(lang1, lang2, model_id)
-    deck = genanki.Deck(random_id(), f"50Languages {lang1}-{lang2}")
+    model = get_model(src, dest, model_id)
+    deck = genanki.Deck(random_id(), f"50Languages {src}-{dest}")
     media_files = []
     session = requests.Session()
     i = start
     while i <= end:
         print(f"- fetching lesson {i}")
-        lesson_link = LESSON_LINK.format(lang1=lang1, lang2=lang2, lesson=i)
+        lesson_link = LESSON_LINK.format(src=src, dest=dest, lesson=i)
         lesson_link_html = f'<a href="{lesson_link}">{lesson_link}</a>'
-        sentences_1, sentences_2 = get_cached_lesson_sentences(lang1, lang2, str(i))
+        sentences_1, sentences_2 = get_cached_lesson_sentences(src, dest, str(i))
         if sentences_1 and sentences_2:
             print(f"- using cached sentences for lesson {i}")
-            for sound_id, lang1_sentence in sentences_1.items():
-                lang2_sentence = sentences_2[sound_id]
-                filename2 = download_audio(session, lang2, sound_id)
+            for sound_id, src_sentence in sentences_1.items():
+                dest_sentence = sentences_2[sound_id]
+                filename2 = download_audio(session, dest, sound_id)
                 media_files.append(os.path.join(AUDIO_DIR, filename2))
                 note = genanki.Note(
                     model=model,
                     fields=[
-                        lang1_sentence,
-                        lang2_sentence,
+                        src_sentence,
+                        dest_sentence,
                         f"[sound:{filename2}]",
                         lesson_link_html,
                     ],
-                    guid=genanki.guid_for(lang1, lang2, sound_id),
+                    guid=genanki.guid_for(src, dest, sound_id),
                 )
                 deck.add_note(note)
         else:
@@ -175,34 +175,34 @@ def generate_deck(
                     sentence_entries = soup.select(".table tr")
                     for entry in sentence_entries:
                         cols = entry.select("td")
-                        lang1_sentence = cols[0].get_text().strip()
-                        if not lang1_sentence:
+                        src_sentence = cols[0].get_text().strip()
+                        if not src_sentence:
                             continue
                         # Import HTML content of translation - especially useful to display Japanese Furigana correctly
-                        lang2_sentence = cols[1].select("a")[1].decode_contents()
+                        dest_sentence = cols[1].select("a")[1].decode_contents()
                         sound_id = cols[2].select("a")[0]["offset_text"]
-                        filename2 = download_audio(session, lang2, sound_id)
+                        filename2 = download_audio(session, dest, sound_id)
                         media_files.append(os.path.join(AUDIO_DIR, filename2))
 
                         note = genanki.Note(
                             model=model,
                             fields=[
-                                lang1_sentence,
-                                lang2_sentence,
+                                src_sentence,
+                                dest_sentence,
                                 f"[sound:{filename2}]",
                                 lesson_link_html,
                             ],
                         )
                         deck.add_note(note)
-                        sentences_1[sound_id] = lang1_sentence
-                        sentences_2[sound_id] = lang2_sentence
+                        sentences_1[sound_id] = src_sentence
+                        sentences_2[sound_id] = dest_sentence
 
             except ConnectionResetError:
                 # FIXME: should we catch more exceptions here?
                 time.sleep(60)
                 continue
-            cache_lesson_sentences(lang1, str(i), sentences_1)
-            cache_lesson_sentences(lang2, str(i), sentences_2)
+            cache_lesson_sentences(src, str(i), sentences_1)
+            cache_lesson_sentences(dest, str(i), sentences_2)
             time.sleep(random.randrange(1, 30))
         i += 1
 
@@ -214,20 +214,20 @@ def generate_deck(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--srclang",
-        help="code of source language",
+        "--src",
+        help="Code of source language",
         metavar="LANG_CODE",
         required=True,
     )
     parser.add_argument(
-        "--destlang",
-        help="code of destination language",
+        "--dest",
+        help="Code of destination language",
         metavar="LANG_CODE",
         required=True,
     )
     parser.add_argument(
         "--start",
-        help="number of lesson to start downloading from (1-100)",
+        help="Number of lesson to start downloading from (1-100)",
         type=int,
         metavar="N",
         choices=range(1, 101),
@@ -235,7 +235,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--end",
-        help="number of last lesson to download (1-100)",
+        help="Number of last lesson to download (1-100)",
         type=int,
         metavar="N",
         choices=range(1, 101),
@@ -248,4 +248,4 @@ if __name__ == "__main__":
         metavar="ID",
     )
     args = parser.parse_args()
-    generate_deck(args.srclang, args.destlang, args.start, args.end, args.model_id)
+    generate_deck(args.src, args.dest, args.start, args.end, args.model_id)
