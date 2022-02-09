@@ -1,4 +1,4 @@
-A Python script to extract sentences with and audio and their translations from [50Languages](https://www.50languages.com/)
+A Python script to extract sentences, audio, and translations from [50Languages](https://www.50languages.com/)
 and generate [Anki](https://apps.ankiweb.net/) flashcards from them for language learning.
 
 ## Usage
