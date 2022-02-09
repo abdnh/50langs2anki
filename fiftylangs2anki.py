@@ -3,7 +3,7 @@ import time
 import random
 import json
 import argparse
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional
 
 import requests
 from bs4 import BeautifulSoup
@@ -78,10 +78,9 @@ def random_id() -> int:
     return random.randrange(1 << 30, 1 << 31)
 
 
-# FIXME: we should probably use a fixed id for each language combination so that re-importing works as expected
-def get_model(lang1: str, lang2: str) -> genanki.Model:
+def get_model(lang1: str, lang2: str, model_id: Optional[int] = None) -> genanki.Model:
     return genanki.Model(
-        random_id(),
+        model_id if model_id is not None else random_id(),
         f"50Languages {lang1}-{lang2}",
         fields=[
             {"name": lang1},
@@ -124,7 +123,13 @@ def get_model(lang1: str, lang2: str) -> genanki.Model:
     )
 
 
-def generate_deck(lang1: str, lang2: str, start: int = 1, end: int = 100):
+def generate_deck(
+    lang1: str,
+    lang2: str,
+    start: int = 1,
+    end: int = 100,
+    model_id: Optional[int] = None,
+):
     """
     Download sentences from lesson number `start` to number `end` in `lang2` and
     their translations in `lang1` with audio files in `lang1`
@@ -133,7 +138,7 @@ def generate_deck(lang1: str, lang2: str, start: int = 1, end: int = 100):
     """
     deck_package_name = f"50Languages_{lang1}-{lang2}_{start}-{end}.apkg"
     print(f"- generating {deck_package_name}")
-    model = get_model(lang1, lang2)
+    model = get_model(lang1, lang2, model_id)
     deck = genanki.Deck(random_id(), f"50Languages {lang1}-{lang2}")
     media_files = []
     session = requests.Session()
@@ -157,6 +162,7 @@ def generate_deck(lang1: str, lang2: str, start: int = 1, end: int = 100):
                         f"[sound:{filename2}]",
                         lesson_link_html,
                     ],
+                    guid=genanki.guid_for(lang1, lang2, sound_id),
                 )
                 deck.add_note(note)
         else:
@@ -235,5 +241,11 @@ if __name__ == "__main__":
         choices=range(1, 101),
         default=100,
     )
+    parser.add_argument(
+        "--model-id",
+        help="Model ID to use for the generated notes",
+        type=int,
+        metavar="ID",
+    )
     args = parser.parse_args()
-    generate_deck(args.srclang, args.destlang, args.start, args.end)
+    generate_deck(args.srclang, args.destlang, args.start, args.end, args.model_id)
