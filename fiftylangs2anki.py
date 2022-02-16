@@ -178,8 +178,7 @@ def generate_deck(
                         src_sentence = cols[0].get_text().strip()
                         if not src_sentence:
                             continue
-                        # Import HTML content of translation - especially useful to display Japanese Furigana correctly
-                        dest_sentence = cols[1].select("a")[1].decode_contents()
+                        dest_sentence = str(cols[1].select("a")[1].contents[0])
                         sound_id = cols[2].select("a")[0]["offset_text"]
                         filename2 = download_audio(session, dest, sound_id)
                         media_files.append(os.path.join(AUDIO_DIR, filename2))
