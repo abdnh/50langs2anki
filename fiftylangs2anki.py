@@ -129,6 +129,7 @@ def generate_deck(
     start: int = 1,
     end: int = 100,
     model_id: Optional[int] = None,
+    outfile: Optional[str] = None,
 ):
     """
     Download sentences from lesson number `start` to number `end` in `dest` and
@@ -136,7 +137,9 @@ def generate_deck(
     and create a deck package named "50Languages_{src}-{dest}_{start}-{end}.apkg" in the current
     working directory.
     """
-    deck_package_name = f"50Languages_{src}-{dest}_{start}-{end}.apkg"
+    deck_package_name = (
+        f"50Languages_{src}-{dest}_{start}-{end}.apkg" if not outfile else outfile
+    )
     print(f"- generating {deck_package_name}")
     model = get_model(src, dest, model_id)
     deck = genanki.Deck(random_id(), f"50Languages {src}-{dest}")
@@ -246,5 +249,10 @@ if __name__ == "__main__":
         type=int,
         metavar="ID",
     )
+    parser.add_argument(
+        "--out",
+        help="File to write the deck to",
+        metavar="FILE",
+    )
     args = parser.parse_args()
-    generate_deck(args.src, args.dest, args.start, args.end, args.model_id)
+    generate_deck(args.src, args.dest, args.start, args.end, args.model_id, args.out)
