@@ -123,6 +123,30 @@ def get_model(src: str, dest: str, model_id: Optional[int] = None) -> genanki.Mo
     )
 
 
+def add_note(
+    model: genanki.Model,
+    deck: genanki.Deck,
+    src: str,
+    dest: str,
+    sound_id: str,
+    src_sentence: str,
+    dest_sentence: str,
+    filename2: str,
+    lesson_link_html: str,
+):
+    note = genanki.Note(
+        model=model,
+        fields=[
+            src_sentence,
+            dest_sentence,
+            f"[sound:{filename2}]",
+            lesson_link_html,
+        ],
+        guid=genanki.guid_for(src, dest, sound_id),
+    )
+    deck.add_note(note)
+
+
 def generate_deck(
     src: str,
     dest: str,
@@ -157,17 +181,17 @@ def generate_deck(
                 dest_sentence = sentences_2[sound_id]
                 filename2 = download_audio(session, dest, sound_id)
                 media_files.append(os.path.join(AUDIO_DIR, filename2))
-                note = genanki.Note(
-                    model=model,
-                    fields=[
-                        src_sentence,
-                        dest_sentence,
-                        f"[sound:{filename2}]",
-                        lesson_link_html,
-                    ],
-                    guid=genanki.guid_for(src, dest, sound_id),
+                add_note(
+                    model,
+                    deck,
+                    src,
+                    dest,
+                    sound_id,
+                    src_sentence,
+                    dest_sentence,
+                    filename2,
+                    lesson_link_html,
                 )
-                deck.add_note(note)
         else:
             sentences_1 = {}
             sentences_2 = {}
@@ -185,17 +209,17 @@ def generate_deck(
                         sound_id = cols[2].select("a")[0]["offset_text"]
                         filename2 = download_audio(session, dest, sound_id)
                         media_files.append(os.path.join(AUDIO_DIR, filename2))
-
-                        note = genanki.Note(
-                            model=model,
-                            fields=[
-                                src_sentence,
-                                dest_sentence,
-                                f"[sound:{filename2}]",
-                                lesson_link_html,
-                            ],
+                        add_note(
+                            model,
+                            deck,
+                            src,
+                            dest,
+                            sound_id,
+                            src_sentence,
+                            dest_sentence,
+                            filename2,
+                            lesson_link_html,
                         )
-                        deck.add_note(note)
                         sentences_1[sound_id] = src_sentence
                         sentences_2[sound_id] = dest_sentence
 
