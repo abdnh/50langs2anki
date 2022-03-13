@@ -167,7 +167,11 @@ def generate_deck(
     )
     print(f"- generating {deck_package_name}")
     model = get_model(src, dest, model_id)
-    deck = genanki.Deck(random_id(), f"50Languages {src}-{dest}")
+    deck = genanki.Deck(
+        random_id(),
+        f"50Languages {src}-{dest}",
+        description="""50Languages's content is licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 3.0 license (CC BY-NC-ND 3.0). See <a href="https://www.50languages.com/licence.php">https://www.50languages.com/licence.php</a>""",
+    )
     media_files = []
     session = requests.Session()
     i = start
