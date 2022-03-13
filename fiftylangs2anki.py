@@ -143,6 +143,7 @@ def add_note(
             lesson_link_html,
         ],
         guid=genanki.guid_for(src, dest, sound_id),
+        due=len(deck.notes),
     )
     deck.add_note(note)
 
