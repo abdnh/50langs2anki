@@ -1,3 +1,4 @@
+import sys
 import os
 import time
 import random
@@ -165,7 +166,7 @@ def generate_deck(
     deck_package_name = (
         f"50Languages_{src}-{dest}_{start}-{end}.apkg" if not outfile else outfile
     )
-    print(f"- generating {deck_package_name}")
+    print(f"Generating {deck_package_name}...")
     model = get_model(src, dest, model_id)
     deck = genanki.Deck(
         random_id(),
@@ -176,12 +177,13 @@ def generate_deck(
     session = requests.Session()
     i = start
     while i <= end:
-        print(f"- fetching lesson {i}")
+        sys.stdout.write(f"\rFetching lesson {i}...")
+        sys.stdout.flush()
+
         lesson_link = LESSON_LINK.format(src=src, dest=dest, lesson=i)
         lesson_link_html = f'<a href="{lesson_link}">{lesson_link}</a>'
         sentences_1, sentences_2 = get_cached_lesson_sentences(src, dest, str(i))
         if sentences_1 and sentences_2:
-            print(f"- using cached sentences for lesson {i}")
             for sound_id, src_sentence in sentences_1.items():
                 dest_sentence = sentences_2[sound_id]
                 filename2 = download_audio(session, dest, sound_id)
