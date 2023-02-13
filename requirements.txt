@@ -1,4 +1,4 @@
 beautifulsoup4
-genanki
+genanki>=0.12.0
 black
 requests
