@@ -10,7 +10,9 @@ import requests
 from bs4 import BeautifulSoup
 import genanki
 
-LESSON_LINK = "https://www.50languages.com/phrasebook/lesson/{src}/{dest}/{lesson}"
+LESSON_LINK = (
+    "https://www.50languages.com/{src}/learn/phrasebook-lessons/{lesson}/{dest}"
+)
 SOUND_LINK = "https://www.book2.nl/book2/{lang}/SOUND/{sound_id}.mp3"
 
 CSS = """\
@@ -180,7 +182,8 @@ def generate_deck(
         sys.stdout.write(f"\rFetching lesson {i}...")
         sys.stdout.flush()
 
-        lesson_link = LESSON_LINK.format(src=src, dest=dest, lesson=i)
+        # 50languages.com was redesigned in February 2023, and for some reason, the lesson numbers in the links now start from 162
+        lesson_link = LESSON_LINK.format(src=src, dest=dest, lesson=i + 161)
         lesson_link_html = f'<a href="{lesson_link}">{lesson_link}</a>'
         sentences_1, sentences_2 = get_cached_lesson_sentences(src, dest, str(i))
         if sentences_1 and sentences_2:
@@ -213,7 +216,7 @@ def generate_deck(
                         if not src_sentence:
                             continue
                         dest_sentence = str(cols[1].select("a")[1].contents[0])
-                        sound_id = cols[2].select("a")[0]["offset_text"]
+                        sound_id = cols[2].select_one("[offset_text]")["offset_text"]
                         filename2 = download_audio(session, dest, sound_id)
                         media_files.append(os.path.join(AUDIO_DIR, filename2))
                         add_note(
