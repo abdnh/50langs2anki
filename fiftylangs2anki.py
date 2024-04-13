@@ -65,7 +65,7 @@ def cache_lesson_sentences(lang: str, lesson_id: str, sentences: Dict):
 
 
 def download_audio(session: requests.Session, lang: str, sound_id: str) -> str:
-    link = SOUND_LINK.format(sound_id=sound_id, lang=lang)
+    link = SOUND_LINK.format(sound_id=sound_id, lang=lang.upper())
     filename = f"{lang}_{sound_id}.mp3"
     path = os.path.join(AUDIO_DIR, filename)
     if os.path.exists(path):
