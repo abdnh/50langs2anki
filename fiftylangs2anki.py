@@ -65,7 +65,7 @@ def cache_lesson_sentences(lang: str, lesson_id: str, sentences: Dict):
 
 
 def download_audio(session: requests.Session, lang: str, sound_id: str) -> str:
-    link = SOUND_LINK.format(sound_id=sound_id, lang=lang)
+    link = SOUND_LINK.format(sound_id=sound_id, lang=lang.upper())
     filename = f"{lang}_{sound_id}.mp3"
     path = os.path.join(AUDIO_DIR, filename)
     if os.path.exists(path):
@@ -215,7 +215,7 @@ def generate_deck(
                         src_sentence = cols[0].get_text().strip()
                         if not src_sentence:
                             continue
-                        dest_sentence = str(cols[1].select("a")[1].contents[0])
+                        dest_sentence = str(cols[1].select('span')[4].contents[0])
                         sound_id = cols[2].select_one("[offset_text]")["offset_text"]
                         filename2 = download_audio(session, dest, sound_id)
                         media_files.append(os.path.join(AUDIO_DIR, filename2))
